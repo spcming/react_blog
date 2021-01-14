@@ -1,14 +1,48 @@
+import {useEffect} from 'react'
 import Head from 'next/head'
-// import styles from '../styles/Home.module.css'
-import {Row, Col, Breadcrumb} from 'antd'
+import {Row, Col, Breadcrumb, Affix} from 'antd'
 import {CalendarOutlined, FolderOutlined, FireOutlined} from '@ant-design/icons'
+import ReactMarkdown from 'react-markdown'
+import gfm from 'remark-gfm'
+import MarkNav from 'markdown-navbar'
 import Header from '../components/Header'
 import Author from '../components/Author'
 import Advert from '../components/Advert'
 import Footer from '../components/Footer'
 import style from '../styles/pages/detailed.module.css'
 
+
 export default function Detailed() {
+  const markdown = '*这是倾斜的文字*`\n\n' +
+  '***这是斜体加粗的文字***\n\n' +
+  '~~这是加删除线的文字~~ \n\n'+
+  '\`console.log(111)\` \n\n'+
+  '# p02:来个Hello World 初始Vue3.0\n' +
+  '> aaaaaaaaa\n' +
+  '>> bbbbbbbbb\n' +
+  '>>> cccccccccc\n'+
+  '***\n\n\n' +
+  '# p03:Vue3.0基础知识讲解\n' +
+  '> aaaaaaaaa\n' +
+  '>> bbbbbbbbb\n' +
+  '>>> cccccccccc\n\n'+
+  '# p04:Vue3.0基础知识讲解\n' +
+  '> aaaaaaaaa\n' +
+  '>> bbbbbbbbb\n' +
+  '>>> cccccccccc\n\n'+
+  '#5 p05:Vue3.0基础知识讲解\n' +
+  '> aaaaaaaaa\n' +
+  '>> bbbbbbbbb\n' +
+  '>>> cccccccccc\n\n'+
+  '# p06:Vue3.0基础知识讲解\n' +
+  '> aaaaaaaaa\n' +
+  '>> bbbbbbbbb\n' +
+  '>>> cccccccccc\n\n'+
+  '# p07:Vue3.0基础知识讲解\n' +
+  '> aaaaaaaaa\n' +
+  '>> bbbbbbbbb\n' +
+  '>>> cccccccccc\n\n'+
+  '```js \n  var a=11;  \n```'
   return (
     <div>
       <Head>
@@ -35,13 +69,24 @@ export default function Detailed() {
               <span><FireOutlined/>1人</span>
             </div>
             <div className={style.detailedContent}>
-              markdown内容
+              <ReactMarkdown plugins={[gfm]}>{markdown}</ReactMarkdown>
             </div>
           </div>
         </Col>
         <Col className="comm-right" xs={0} sm={0} md={7} lg={5} xl={4}>
           <Author/>
           <Advert/>
+          <Affix offsetTop={5}>
+            <div className={style.detailedNav + ' comm-box'}>
+              <div className={style.navTitle}>文章目录</div>
+              <MarkNav
+                className={style.articleMenu}
+                source={markdown}
+                headingTopOffset={0} // 默认是0
+                ordered={false}
+              />
+            </div>
+          </Affix>
         </Col>
       </Row>
       <Footer/>
