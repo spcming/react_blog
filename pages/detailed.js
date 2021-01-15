@@ -1,48 +1,42 @@
-import {useEffect} from 'react'
 import Head from 'next/head'
 import {Row, Col, Breadcrumb, Affix} from 'antd'
 import {CalendarOutlined, FolderOutlined, FireOutlined} from '@ant-design/icons'
-import ReactMarkdown from 'react-markdown'
-import gfm from 'remark-gfm'
-import MarkNav from 'markdown-navbar'
+import axios from 'axios'
+import marked from 'marked'
+import hljs from 'highlight.js'
+
 import Header from '../components/Header'
 import Author from '../components/Author'
 import Advert from '../components/Advert'
 import Footer from '../components/Footer'
 import style from '../styles/pages/detailed.module.css'
 
+import Tocify from '../components/tocify.tsx';
+import servicePath from '../config/apiUrl';
 
-export default function Detailed() {
-  const markdown = '*这是倾斜的文字*`\n\n' +
-  '***这是斜体加粗的文字***\n\n' +
-  '~~这是加删除线的文字~~ \n\n'+
-  '\`console.log(111)\` \n\n'+
-  '# p02:来个Hello World 初始Vue3.0\n' +
-  '> aaaaaaaaa\n' +
-  '>> bbbbbbbbb\n' +
-  '>>> cccccccccc\n'+
-  '***\n\n\n' +
-  '# p03:Vue3.0基础知识讲解\n' +
-  '> aaaaaaaaa\n' +
-  '>> bbbbbbbbb\n' +
-  '>>> cccccccccc\n\n'+
-  '# p04:Vue3.0基础知识讲解\n' +
-  '> aaaaaaaaa\n' +
-  '>> bbbbbbbbb\n' +
-  '>>> cccccccccc\n\n'+
-  '#5 p05:Vue3.0基础知识讲解\n' +
-  '> aaaaaaaaa\n' +
-  '>> bbbbbbbbb\n' +
-  '>>> cccccccccc\n\n'+
-  '# p06:Vue3.0基础知识讲解\n' +
-  '> aaaaaaaaa\n' +
-  '>> bbbbbbbbb\n' +
-  '>>> cccccccccc\n\n'+
-  '# p07:Vue3.0基础知识讲解\n' +
-  '> aaaaaaaaa\n' +
-  '>> bbbbbbbbb\n' +
-  '>>> cccccccccc\n\n'+
-  '```js \n  var a=11;  \n```'
+function Detailed(props) {
+  const tocify = new Tocify()
+  const renderer = new marked.Renderer()
+
+  renderer.heading = function(text, level, raw) {
+    const anchor = tocify.add(text, level);
+    return `<a id="${anchor}" href="#${anchor}" class="anchor-fix"><h${level}>${text}</h${level}></a>\n`;
+  };
+
+  marked.setOptions({
+    renderer:renderer,
+    gfm:true, // 是否使用github标准解析markdown
+    pedantic:false, // 是否开启markdown的严格模式
+    sanitize:false, // 是否忽略HTML标签
+    tables:true, // 是否解析表格（根据github标准，同时gfm必须为true
+    breaks:false, // 是否支持github换行符
+    smartLists:true, // 是否自动渲染列表
+    highlight:function(code){ // 如何进行代码高亮
+      return hljs.highlightAuto(code).value
+    }
+  })
+  let html = marked(props.article_content)
+
   return (
     <div>
       <Head>
@@ -61,15 +55,16 @@ export default function Detailed() {
           </div>
           <div>
             <div className={style.detailedTitle}>
-              React实战视频教程
+              {props.title}
             </div>
             <div className="list-icon center">
-              <span><CalendarOutlined/>2021/1/13</span>
-              <span><FolderOutlined/>视频教程</span>
-              <span><FireOutlined/>1人</span>
+              <span><CalendarOutlined/>{props.addTime}</span>
+              <span><FolderOutlined/>{props.typeName}</span>
+              <span><FireOutlined/>{props.view_count}人</span>
             </div>
-            <div className={style.detailedContent}>
-              <ReactMarkdown plugins={[gfm]}>{markdown}</ReactMarkdown>
+            <div className={style.detailedContent}
+              dangerouslySetInnerHTML={{__html:html}}
+            >
             </div>
           </div>
         </Col>
@@ -79,12 +74,9 @@ export default function Detailed() {
           <Affix offsetTop={5}>
             <div className={style.detailedNav + ' comm-box'}>
               <div className={style.navTitle}>文章目录</div>
-              <MarkNav
-                className={style.articleMenu}
-                source={markdown}
-                headingTopOffset={0} // 默认是0
-                ordered={false}
-              />
+              {
+                tocify && tocify.render()
+              }
             </div>
           </Affix>
         </Col>
@@ -93,3 +85,13 @@ export default function Detailed() {
     </div>
   )
 }
+
+Detailed.getInitialProps = async(context)=>{
+  let promise = new Promise((resolve)=>{
+    axios(servicePath.getArticleById + context.query.id).then(res=>{
+      resolve(res.data.data[0])
+    })
+  })
+  return await promise
+}
+export default Detailed
